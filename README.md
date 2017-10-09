@@ -1,24 +1,29 @@
-Heroku buildpack: Vendor Binaries
-=================================
+Heroku buildpack: Stackray
+==========================
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for vendoring binaries into your project. It doesn't do anything else, so to actually compile your app you should use [heroku-buildpack-multi](https://github.com/ddollar/heroku-buildpack-multi) to combine it with a real buildpack.
+This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks)
+for adding [Stackray](http://www.stackray.com/) Modeler into your project.
 
 Usage
 -----
 
-    $ ls
-    .vendor_urls
-    .buildpacks
+To compile your heroku app use [heroku-buildpack-multi](https://github.com/ddollar/heroku-buildpack-multi) to
+combine it, along with a Java buildpack and your existing language/stack buildpack.
 
-    $ heroku create --stack cedar --buildpack http://github.com/dollar/heroku-buildpack-multi.git
+Building
+--------
+
+    $ heroku create --stack cedar --buildpack http://github.com/stackray/heroku-buildpack-stackray.git
 
     $ git push heroku master
     ...
     -----> Heroku receiving push
     -----> Fetching custom buildpack
-    -----> Found a .vendor_urls file
-           Vendoring https://s3.amazonaws.com/my-bucket/foo.tar.gz
+    -----> Found a .stackray file
+           Vendoring https://s3.amazonaws.com/stackray/stackray.jar
     ...
 
-The buildpack will detect that your app has a `.vendor_urls` file in the root. Each line in this file will be treated as a URL pointing at a tarball to fetch and extract into your application's root directory.
+The buildpack will detect that your app has a `.stackray` file in the
+root. It feches a tarball and extracts a jar into your application's
+root directory, and runs .profile.d/start-service.
 
