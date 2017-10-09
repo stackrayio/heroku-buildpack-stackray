@@ -25,5 +25,5 @@ if [ -n "$jar" ]; then # incase ensure_newline_at_eof_on_save is enabled
  elif [ "$extension" == "tar" ]; then flag=""  # no compression
  fi
 
- curl -L --silent $url | tar x $flag
+ curl -L --silent $jar | tar x $flag
 fi
