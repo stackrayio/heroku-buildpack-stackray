@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -x
 
 export ENV_DIR=${3:-}
 
@@ -38,7 +37,7 @@ cd $1
 while read url; do	
 	if [ -n "$url" ]; then # incase ensure_newline_at_eof_on_save is enabled
 		echo Downloading $url | indent
-		curl -L $url
+		curl -L -s $url
 	fi
 done < .stackray
 
@@ -46,7 +45,7 @@ done < .stackray
 
 mkdir -p $1/.profile.d
 script=$1/.profile.d/start.sh
-export_env_dir
+#export_env_dir
 echo "java -jar stackray.jar --seed service/start" >>"$script"
 
 echo "installed .profile.d script to start Stackray as a Service." | i
