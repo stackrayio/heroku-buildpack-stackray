@@ -1,29 +1,52 @@
 #!/bin/bash
 
+set -e
+set -x
+
+export ENV_DIR=${3:-}
+
+## Helpers
+
+export_env_dir() {
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
 indent() {
   sed -u 's/^/       /'
 }
 
+## Validate
+
 echo "-----> Found a .stackray file"
 
-# Bail early but noisily
 if [ ! -s $1/.stackray ]; then
-  echo ".stackray empty. Skipping." | indent
+  echo ".stackray empty, skipping." | indent
   exit 0
 fi
 
 cd $1
 
-if [ -n "$jar" ]; then # incase ensure_newline_at_eof_on_save is enabled
- echo Downloading $jar | indent
+while read url; do	
+	if [ -n "$url" ]; then # incase ensure_newline_at_eof_on_save is enabled
+		echo Downloading $url | indent
+		curl -L $url
+	fi
+done < .stackray
 
- extension="${jar##*.}" # http://stackoverflow.com/q/965053
+## Start service (create .profile.d, sourced at each dyno startup)
 
- flag="-z" # by default use gz
- if [ "$extension" == "xz" ]; then flag="--xz"
- elif [ "$extension" == "bz2" ]; then flag="--bzip2"
- elif [ "$extension" == "tar" ]; then flag=""  # no compression
- fi
+mkdir -p $1/.profile.d
+script=$1/.profile.d/start.sh
+export_env_dir
+echo "java -jar stackray.jar --seed service/start" >>"$script"
 
- curl -L --silent $jar | tar x $flag
-fi
+echo "installed .profile.d script to start Stackray as a Service." | i
