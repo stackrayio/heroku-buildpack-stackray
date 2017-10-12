@@ -4,20 +4,18 @@
 set -eu
 
 export BUILD_DIR=$1
-export CACHE_DIR=$2 
+export CACHE_DIR=$2
+export ENV_DIR=$3
 export BUILDPACK_DIR="$(dirname $(dirname $0))"
-
-## Helpers
 
 #export ENV_DIR=${3:-}
 export_env_dir() {
-  env_dir=$1
   whitelist_regex=${2:-''}
   blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
-  if [ -d "$env_dir" ]; then
-    for e in $(ls $env_dir); do
+  if [ -d "$ENV_DIR" ]; then
+    for e in $(ls $ENV_DIR); do
       echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
-      export "$e=$(cat $env_dir/$e)"
+      export "$e=$(cat $ENV_DIR/$e)"
       :
     done
   fi
@@ -27,29 +25,41 @@ indent() {
   sed -u 's/^/       /'
 }
 
-if [ ! -s $1/.stackray ]; then
-  echo ".stackray empty, skipping." | indent
-  exit 0
-fi
-echo "-----> Found a .stackray file"
+validate () {
+  if [ ! -s $BUILD_DIR/.stackray ]; then
+    echo ".stackray empty, skipping." | indent
+    exit 0
+  fi
+  echo "-----> Found a .stackray file"
+}
 
-cd $1
-
-while read url; do	
+load() {
+  while read url; do	
 	if [ -n "$url" ]; then # incase ensure_newline_at_eof_on_save is enabled
 		echo "Downloading $url" | indent
 		curl -H "Accept: application/zip" $url -o stackray.jar | indent
 	fi
-done < .stackray
+  done < .stackray
+}
 
 ## Start service (create .profile.d, sourced at each dyno startup)
+init() {
+  mkdir -p $BUILD_DIR/.profile.d
+  script=$BUILD_DIR/.profile.d/start.sh
 
-mkdir -p $1/.profile.d
-script=$1/.profile.d/start.sh
+  echo "echo \"Starting Stackray Service\"" >>"$script" 
+  echo "java -jar stackray.jar --seed service/start" >>"$script"
 
-echo "echo \"Starting Stackray Service\"" >>"$script" 
-echo "java -jar stackray.jar --seed service/start" >>"$script"
+  chmod a+x $script
+  echo "Installed .profile.d script to start Stackray as a Service."
+}
 
-chmod a+x $script
+# Main -----
 
-echo "Installed .profile.d script to start Stackray as a Service."
+export_env_dir
+echo "Current environment: " $(printenv)
+validate
+cd $BUILD_DIR
+load
+init
+
