@@ -48,7 +48,7 @@ init() {
   script=$BUILD_DIR/.profile.d/start.sh
 
   echo "echo \"Starting Stackray Service\"" >>"$script" 
-  echo "java -jar stackray.jar --seed service/start" >>"$script"
+  #echo "java -jar stackray.jar --seed service/start" >>"$script"
 
   chmod a+x $script
   echo "Installed .profile.d script to start Stackray as a Service."
