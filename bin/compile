@@ -34,11 +34,11 @@ validate () {
 }
 
 load() {
+  echo "Loading .stackray contents" | indent
   while read url; do	
-	if [ -n "$url" ]; then # incase ensure_newline_at_eof_on_save is enabled
-		echo "Downloading $url" | indent
-		curl -H "Accept: application/zip" $url -o stackray.jar | indent
-	fi
+	  echo "Downloading $url" | indent
+	  curl -H "Accept: application/zip" $url -o stackray.jar | indent
+	
   done < .stackray
 }
 
@@ -48,7 +48,7 @@ init() {
   script=$BUILD_DIR/.profile.d/start.sh
 
   echo "echo \"Starting Stackray Service\"" >>"$script" 
-  #echo "java -jar stackray.jar --seed service/start" >>"$script"
+  echo "java -jar stackray.jar --seed service/start" >>"$script"
 
   chmod a+x $script
   echo "Installed .profile.d script to start Stackray as a Service."
@@ -61,5 +61,5 @@ echo "Current environment: " $(printenv)
 validate
 cd $BUILD_DIR
 load
-init
+#init
 
