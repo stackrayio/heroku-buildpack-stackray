@@ -42,6 +42,19 @@ load() {
   done < .stackray
 }
 
+add-pom-for-non-java-apps() {
+  if [ -f $BUILD_DIR/pom.xml ] ; then
+    echo ""
+  else
+	echo "Installing an empty pom.xml to enable jdk detection for Stackray service"
+	cp $BUILD_DIR/pom.xml .
+  fi
+}
+
+set-env() {
+	export STACKRAY_HEROKU_CLIENT=t
+}
+
 ## Start service (create .profile.d, sourced at each dyno startup)
 init() {
   mkdir -p $BUILD_DIR/.profile.d
@@ -61,5 +74,7 @@ echo "Current environment: " $(printenv)
 validate
 cd $BUILD_DIR
 load
+set-env
+add-pom-for-non-java-apps
 #init
 
